@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getAllBooks } from "@/lib/content";
-import UploadBooks from "@/components/UploadBooks";
+import UploadBooksWrapper from "@/components/UploadBooksWrapper";
 
 export default async function Home() {
     const books = await getAllBooks();
@@ -34,7 +34,7 @@ export default async function Home() {
                 </ul>
             )}
 
-            <UploadBooks />
+            <UploadBooksWrapper />
         </main>
     );
 }
