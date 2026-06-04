@@ -1,13 +1,32 @@
 // Browser port of convert.ts. Same structure-extraction logic, but it takes an
 // ArrayBuffer and returns an in-memory StoredBook instead of writing files.
-import * as pdfjs from "pdfjs-dist";
+
+// iOS Safari <16.4 ships ReadableStream without Symbol.asyncIterator, which pdfjs needs.
+if (typeof ReadableStream !== "undefined" && !(ReadableStream.prototype as any)[Symbol.asyncIterator]) {
+    Object.defineProperty(ReadableStream.prototype, Symbol.asyncIterator, {
+        async *value(this: ReadableStream) {
+            const reader = this.getReader();
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) return;
+                    yield value;
+                }
+            } finally {
+                reader.releaseLock();
+            }
+        },
+    });
+}
+
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { BookManifest } from "@/lib/content";
 import type { StoredBook } from "@/lib/idb";
 
 // pdf.js needs a worker in the browser. Bundlers resolve this URL at build time.
 // If your installed pdfjs-dist uses a different worker filename, adjust it here.
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
+    "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
     import.meta.url,
 ).toString();
 
